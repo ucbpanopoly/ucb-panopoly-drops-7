@@ -329,9 +329,10 @@ class PantheonApacheSolrService {
     $this->env_id = $env_id;
 
     // Pantheon-specific URL settings.
-    // Note: we don't pass a port or https at this time, because the parent
-    // SolrPHPClient library assumes http. This data is added later in the
-    // _makeHttpRequest() method.
+    // Note: we don't pass a port at this time, because the parent This data
+    //is added later in the _makeHttpRequest() method.
+
+    // TODO: get $host from variable_get('pantheon_hyperion_host', 'index.live.getpantheon.com')
     $host = 'index.'. variable_get('pantheon_tier', 'live') .'.getpantheon.com';
     $path = 'sites/self/environments/'. variable_get('pantheon_environment', 'dev') .'/index';
     $url = 'https://'. $host .'/'. $path;
