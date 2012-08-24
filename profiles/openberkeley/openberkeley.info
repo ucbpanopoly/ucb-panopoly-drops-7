@@ -1,0 +1,12 @@
+name = Open Berkeley
+base = Panopoly
+description = Panopoly customized for UC Berkeley
+version = 7.x-1.0-beta4_ucb_1.0-alpha2
+core = 7.x
+
+; UCB
+dependencies[] = smtp
+; dependencies[] = admin_menu
+; dependencies[] = nice_menus
+
+
