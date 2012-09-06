@@ -11,7 +11,7 @@ require_once ('profiles/panopoly/panopoly.profile');
 function openberkeley_install_tasks(&$install_state) {
   $ucb_apps_tasks = array();
   $tasks = panopoly_install_tasks($install_state);
-
+  
   // Setup the UC Berkeley Apps install task
   $ucberkeley_server = array(
     'machine name' => 'ucberkeley',
@@ -30,6 +30,13 @@ function openberkeley_install_tasks(&$install_state) {
   );
   $tasks = array_insert_before($tasks, 'panopoly_final_setup', $ucb_smtp_task);
 
+  // Skip "verify apps support" task if obviously not needed
+  // is_writeable should really be tested in apps_profile_install_tasks()
+  if (is_writable('sites/all/modules')) {
+    unset($tasks['apps_install_verify']);
+  }
+
+  
   /*
    Tasks:
    apps_install_verify
@@ -50,8 +57,14 @@ function openberkeley_install_tasks(&$install_state) {
   return $tasks;
 }
 
+function openberkeley_form_apps_profile_apps_select_form_alter(&$form, $form_state) {
+  panopoly_form_apps_profile_apps_select_form_alter($form, $form_state);
+}
+
+//LEFT OFF 8/29 test the above and then continue wrapping the next functions.
+
 function openberkeley_install_tasks_alter(&$tasks, $install_state) {
-  panopoly_install_tasks_alter(&$tasks, $install_state);
+  panopoly_install_tasks_alter($tasks, $install_state);
 }
 
 function openberkeley_form_install_configure_form_alter(&$form, $form_state) {
@@ -59,6 +72,16 @@ function openberkeley_form_install_configure_form_alter(&$form, $form_state) {
   //Override some Panopoly defaults
   $form['site_information']['site_name']['#default_value'] = '';
   $form['admin_account']['account']['name']['#default_value'] = 'ucbadmin';
+}
+
+function openberkeley_apps_servers_info() {
+  $servers = panopoly_apps_servers_info();
+  $servers['ucberkeley'] = array(
+      'title' => 'UC Berkeley',
+      'description' => 'Apps for UC Berkeley',
+      'manifest' => 'http://drupal-apps.berkeley.edu/ucberkeley',
+  );
+  return $servers;
 }
 
 function openberkeley_form_apps_profile_apps_select_form_alter(&$form, $form_state) {
