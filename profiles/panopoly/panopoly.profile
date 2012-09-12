@@ -124,7 +124,6 @@ function panopoly_form_install_configure_form_alter(&$form, $form_state) {
  * Implements hook_form_FORM_ID_alter()
  */
 function panopoly_form_apps_profile_apps_select_form_alter(&$form, $form_state) {
-drupal_set_message('HERE', 'status');
   // For some things there are no need
   $form['apps_message']['#access'] = FALSE;
   $form['apps_fieldset']['apps']['#title'] = NULL;
