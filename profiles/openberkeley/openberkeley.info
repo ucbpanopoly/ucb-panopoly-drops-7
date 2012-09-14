@@ -1,13 +1,16 @@
 name = Open Berkeley
 distribution_name = Open Berkeley
-base = Panopoly
 description = Panopoly customized for UC Berkeley
-version = 7.x-1.0-beta4_ucb_1.0-alpha2
+version = ucb_1.0-alpha2NEXT
 core = 7.x
+; base: Is parsed by openberkeley.profile
+base = panopoly
+; base_version documents what version of the base profile this profile was tested with
+base_version = 7.x-1.0-beta5
 
 ; UCB
 dependencies[] = smtp
-; dependencies[] = admin_menu
-; dependencies[] = nice_menus
+dependencies[] = admin_menu
+dependencies[] = nice_menus
 
 
