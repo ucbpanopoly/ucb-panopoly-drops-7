@@ -28,10 +28,6 @@ function openberkeley_install_tasks(&$install_state) {
   $ucb_apps_task = apps_profile_install_tasks($install_state, $ucberkeley_server);
   //WARNING: array_insert_before on these tasks causes craziness
   $tasks = array_insert_before($tasks, 'panopoly_theme_form', $ucb_apps_task);
-  /*
-   // old way
-   $tasks = $tasks + apps_profile_install_tasks($install_state, $ucberkeley_server);
-   */
   $tasks['apps_profile_apps_select_form_ucberkeley']['display_name'] = t('Install apps for UC Berkeley');
 
   // Add ucb_smtp task
@@ -39,14 +35,11 @@ function openberkeley_install_tasks(&$install_state) {
     'display_name' => t('Site email settings'),
     'type' => 'form',    
   );
-  //improve? array_insert_before so we don't pop it off in the next step
+
   $tasks = array_insert_before($tasks, 'panopoly_final_setup', $ucb_smtp_task);
 
   // Replace panopoly_final_setup with openberkeley_final_setup
-  $panopoly_final_setup = array_pop($tasks);
-  $tasks['openberkeley_final_setup'] = array(
-    'run' => '2',
-  );
+  unset($tasks['panopoly_final_setup']);
 
   // Skip "verify apps support" task if obviously not needed
   // is_writeable should really be tested in apps_profile_install_tasks()
@@ -56,23 +49,22 @@ function openberkeley_install_tasks(&$install_state) {
 
 
   /*
-   Tasks:
-
-   apps_profile_apps_select_form_panopoly	Array [3]
-   apps_profile_download_app_modules_panopoly	Array [4]
-   apps_profile_authorize_transfer_panopoly	Array [4]
-   apps_profile_install_app_modules_panopoly	Array [4]
-   apps_profile_enable_app_modules_panopoly	Array [4]
-   apps_profile_apps_select_form_ucberkeley	Array [1]
-   apps_profile_download_app_modules_ucberkeley	Array [4]
-   apps_profile_authorize_transfer_ucberkeley	Array [4]
-   apps_profile_install_app_modules_ucberkeley	Array [4]
-   apps_profile_enable_app_modules_ucberkeley	Array [4]
-   panopoly_theme_form	Array [2]
-   openberkely_smtp_configure_form	Array [2]
-   panopoly_final_setup	Array [1]
-
+   // TESTING: disable arbitrary steps. This is the order of the tasks.
+   // Commment individual lines to ENABLE tasks when testing.
+   unset($tasks['apps_profile_apps_select_form_panopoly']);
+   unset($tasks['apps_profile_download_app_modules_panopoly']);
+   unset($tasks['apps_profile_authorize_transfer_panopoly']);
+   unset($tasks['apps_profile_install_app_modules_panopoly']);
+   unset($tasks['apps_profile_enable_app_modules_panopoly']);
+   //unset($tasks['apps_profile_apps_select_form_ucberkeley']);
+   //unset($tasks['apps_profile_authorize_transfer_ucberkeley']);
+   //unset($tasks['apps_profile_install_app_modules_ucberkeley']);
+   //unset($tasks['apps_profile_enable_app_modules_ucberkeley']);
+   unset($tasks['panopoly_theme_form	Array']);
+   unset($tasks['openberkely_smtp_configure_form']);
+   //unset($tasks['openberkeley_final_setup']);
    */
+
   return $tasks;
 }
 
@@ -125,6 +117,9 @@ function openberkeley_form_apps_profile_apps_select_form_alter(&$form, $form_sta
 function openberkeley_install_tasks_alter(&$tasks, $install_state) {
   panopoly_install_tasks_alter($tasks, $install_state);
   $tasks['install_load_profile']['function'] = 'openberkeley_install_load_profile';
+  $tasks['install_finished']['function'] = 'openberkeley_final_prep';
+  $tasks['install_finished']['display_name'] = t('Finish up');
+  $tasks['install_finished']['type'] = 'form';
 
 }
 
@@ -182,16 +177,98 @@ return panopoly_theme_form_submit($form, $form_state);
 
 /**
  * Handler callback to do additional setup reqired for the site to be awesome
+
+ function openberkeley_final_setup(&$install_state) {
+
+ // Flush all caches to ensure that any full bootstraps during the installer
+ // do not leave stale cached data, and that any content types or other items
+ // registered by the install profile are registered correctly.
+ _field_info_collate_fields(TRUE);
+ _field_info_collate_fields();
+ drupal_flush_all_caches();
+
+ // Allow anonymous and authenticated users to see and search content
+ panopoly_final_setup($install_state);
+ // make sure the admin role has all permissions.
+ openberkeley_adminrole();
+ drupal_get_messages();
+ }
  */
-function openberkeley_final_setup(&$install_state) {
+
+function openberkeley_final_prep($form, &$form_state) {
+  // Hide some messages from various modules that are just too chatty!
   drupal_get_messages();
-  drupal_set_message('Final!', 'status');
+
+  $form = array();
+
+  // Setup the title for the install task
+  drupal_set_title(t('Finished!'));
+  $form['openingtext'] = array(
+    '#markup' => '<h2>' . t('Congratulations, you just installed Open Berkeley!') . '</h2>'
+    );
+
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Visit your new site!',
+    );
+
+    return $form;
+}
+
+/**
+ * Submit form to finish it out and send us on our way!
+ * Override install_finished() from install.core.inc
+ */
+function openberkeley_final_prep_submit($form, &$form_state) {
+
+  // Flush all caches to ensure that any full bootstraps during the installer
+  // do not leave stale cached data, and that any content types or other items
+  // registered by the install profile are registered correctly.
+  _field_info_collate_fields(TRUE);
+  _field_info_collate_fields();
+
+  drupal_flush_all_caches();
+
+  // Remember the profile which was used.
+  variable_set('install_profile', drupal_get_profile());
+
+  // Install profiles are always loaded last
+  db_update('system')
+  ->fields(array('weight' => 1000))
+  ->condition('type', 'module')
+  ->condition('name', drupal_get_profile())
+  ->execute();
+
+  // Cache a fully-built schema.
+  drupal_get_schema(NULL, TRUE);
+
+  // Run cron to populate update status tables (if available) so that users
+  // will be warned if they've installed an out of date Drupal version.
+  // Will also trigger indexing of profile-supplied content or feeds.
+  drupal_cron_run();
+
   // Allow anonymous and authenticated users to see and search content
-  panopoly_final_setup($install_state);
-  // make sure the admin role has all permissions.
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content'));
+  if (module_exists('panopoly_search')) {
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('search content'));
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('search content'));
+  }
+
+  //make sure the administrative user role has all permissions
   openberkeley_adminrole();
 
+  //Do the smtp test
+  openberkeley_smtp_test();
+
+  // And away we go! Redirect the user to the front page if they are using
+  // the interactive mode installer.
+  $install_state = $form_state['build_info']['args'][0];
+  if ($install_state['interactive']) {
+    drupal_goto('<front>');
+  }
 }
+
 
 
 /**
@@ -199,8 +276,25 @@ function openberkeley_final_setup(&$install_state) {
  */
 function openberkeley_smtp_configure_form($form, &$form_state) {
   drupal_get_messages(); //shh
-  ctools_include('smtp.admin', 'smtp', '');
-  $form = smtp_admin_settings();
+  if (function_exists('ctools_include')) {
+    ctools_include('smtp.admin', 'smtp', '');
+    $form = smtp_admin_settings();
+  }
+  else {
+    $form = array();
+
+    // Setup the title for the install task
+    drupal_set_title(t('Skipping SMTP Configuration step'));
+    $form['openingtext'] = array(
+    '#markup' => '<h2>' . t('Missing dependancies') . '</h2>' . t("You haven't installed CTools so we will skip this step."),
+    );
+
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Continue',
+    );
+
+  }
   return $form;
 }
 
@@ -230,14 +324,11 @@ function openberkeley_smtp_test() {
  */
 function openberkeley_adminrole() {
   if ($rid = variable_get('user_admin_role')) {
-    $permissions = drupal_map_assoc(array_keys(module_invoke_all('permission')));
-    $current = user_role_permissions(array($rid => $rid));
-    foreach ($current[$rid] as $permission => $status) {
-      if (!isset($permissions[$permission])) {
-        $permissions[$permission] = TRUE;
-      }
+    $permissions = array_keys(module_invoke_all('permission'));
+    foreach ($permissions as $key) {
+      $perms[$key] = TRUE;
     }
-    user_role_change_permissions($rid, $permissions);
+    user_role_change_permissions($rid, $perms);
   }
 }
 
