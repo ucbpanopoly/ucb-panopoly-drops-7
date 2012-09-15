@@ -81,6 +81,7 @@ function openberkeley_form_apps_profile_apps_select_form_alter(&$form, $form_sta
   if (strpos($keys[0], 'ucb_') === FALSE) {
     //we're on the Panopoly apps form
     panopoly_form_apps_profile_apps_select_form_alter($form, $form_state);
+    //$form['apps_fieldset']['apps']['#options'] 
   }
   else {
     //we're on the UCB apps form
@@ -110,9 +111,6 @@ function openberkeley_form_apps_profile_apps_select_form_alter(&$form, $form_sta
 
   }
 }
-
-
-
 
 function openberkeley_install_tasks_alter(&$tasks, $install_state) {
   panopoly_install_tasks_alter($tasks, $install_state);
@@ -162,38 +160,6 @@ function openberkeley_apps_servers_info() {
   );
   return $servers;
 }
-
-/* not needed
-
-function openberkeley_theme_form($form, &$form_state) {
-return panopoly_theme_form($form, $form_state);
-}
-
-function openberkeley_theme_form_submit($form, &$form_state) {
-return panopoly_theme_form_submit($form, $form_state);
-}
-
-*/
-
-/**
- * Handler callback to do additional setup reqired for the site to be awesome
-
- function openberkeley_final_setup(&$install_state) {
-
- // Flush all caches to ensure that any full bootstraps during the installer
- // do not leave stale cached data, and that any content types or other items
- // registered by the install profile are registered correctly.
- _field_info_collate_fields(TRUE);
- _field_info_collate_fields();
- drupal_flush_all_caches();
-
- // Allow anonymous and authenticated users to see and search content
- panopoly_final_setup($install_state);
- // make sure the admin role has all permissions.
- openberkeley_adminrole();
- drupal_get_messages();
- }
- */
 
 function openberkeley_final_prep($form, &$form_state) {
   // Hide some messages from various modules that are just too chatty!
