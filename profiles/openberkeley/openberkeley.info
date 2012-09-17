@@ -12,5 +12,15 @@ base_version = 7.x-1.0-beta5
 dependencies[] = smtp
 dependencies[] = admin_menu
 dependencies[] = nice_menus
+dependencies[] = linkit
+dependencies[] = diff
+dependencies[] = pathologic
+dependencies[] = email
+dependencies[] = extlink
+dependencies[] = bundle_copy
+dependencies[] = redirect
+dependencies[] = config_perms
+dependencies[] = insert
+dependencies[] = googleanalytics
 
 
