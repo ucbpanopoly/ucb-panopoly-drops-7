@@ -3,5 +3,6 @@ distribution_name = Panopoly
 description = A magical framework for building Drupal products based on the Panels module
 core = 7.x
 dependencies[] = apps 
+dependencies[] = ctools
 
 version = "7.x-1.0-beta5"
