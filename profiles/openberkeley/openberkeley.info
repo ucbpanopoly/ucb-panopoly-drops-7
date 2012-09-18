@@ -19,7 +19,6 @@ dependencies[] = email
 dependencies[] = extlink
 dependencies[] = bundle_copy
 dependencies[] = redirect
-dependencies[] = config_perms
 dependencies[] = insert
 dependencies[] = googleanalytics
 

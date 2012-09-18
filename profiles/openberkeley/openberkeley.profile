@@ -61,10 +61,11 @@ function openberkeley_install_tasks(&$install_state) {
    //unset($tasks['apps_profile_install_app_modules_ucberkeley']);
    //unset($tasks['apps_profile_enable_app_modules_ucberkeley']);
    unset($tasks['panopoly_theme_form	Array']);
-   unset($tasks['openberkely_smtp_configure_form']);
+ //  unset($tasks['openberkely_smtp_configure_form']);
    //unset($tasks['openberkeley_final_setup']);
-   */
 
+   */
+   
   return $tasks;
 }
 
